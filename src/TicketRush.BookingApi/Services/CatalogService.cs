@@ -36,7 +36,7 @@ public sealed class CatalogService(IConnectionMultiplexer redis)
             hash["name"],
             hash["venue"],
             DateTimeOffset.Parse(hash["startsAt"], CultureInfo.InvariantCulture),
-            int.Parse(hash["capacity"]),
+            int.Parse(hash["capacity"], CultureInfo.InvariantCulture),
             // Не обрізаємо до 0: від'ємне значення означало б oversell, і k6 має це побачити.
             Available: (int)stockTask.Result);
     }

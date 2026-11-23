@@ -8,7 +8,8 @@ namespace TicketRush.BookingApi.Services;
 
 /// <summary>
 /// Публікує <see cref="BookingConfirmed"/> у RabbitMQ.
-/// Одне з'єднання на інстанс + пул каналів (канал не призначений для паралельної публікації).
+/// Одне з'єднання на інстанс + пул каналів (канал не призначений для паралельної публікації),
+/// кількість одночасних публікацій обмежена <see cref="RabbitMqOptions.MaxPublishChannels"/>.
 /// Publisher confirms увімкнені: PublishAsync завершується лише після того, як брокер прийняв повідомлення,
 /// тому при успішній відповіді API повідомлення гарантовано в черзі (persistent, durable queue).
 /// </summary>
@@ -16,10 +17,24 @@ public sealed class BookingPublisher(IOptions<RabbitMqOptions> options, ILogger<
 {
     private readonly RabbitMqOptions _options = options.Value;
     private readonly SemaphoreSlim _connectLock = new(1, 1);
+    private readonly SemaphoreSlim _publishSlots = new(options.Value.MaxPublishChannels, options.Value.MaxPublishChannels);
     private readonly ConcurrentBag<IChannel> _channels = [];
     private IConnection? _connection;
 
     public async Task PublishAsync(BookingConfirmed message, CancellationToken cancellationToken = default)
+    {
+        await _publishSlots.WaitAsync(cancellationToken);
+        try
+        {
+            await PublishOnPooledChannelAsync(message, cancellationToken);
+        }
+        finally
+        {
+            _publishSlots.Release();
+        }
+    }
+
+    private async Task PublishOnPooledChannelAsync(BookingConfirmed message, CancellationToken cancellationToken)
     {
         var channel = await RentChannelAsync(cancellationToken);
         var healthy = false;
@@ -110,5 +125,7 @@ public sealed class BookingPublisher(IOptions<RabbitMqOptions> options, ILogger<
             await channel.DisposeAsync();
         if (_connection is not null)
             await _connection.DisposeAsync();
+        _connectLock.Dispose();
+        _publishSlots.Dispose();
     }
 }

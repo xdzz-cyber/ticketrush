@@ -27,6 +27,11 @@ public static class RedisKeys
     /// <summary>Member у <see cref="ExpiringHolds"/>: "{eventId}:{reservationId:N}".</summary>
     public static string HoldMember(int eventId, Guid reservationId) => $"{eventId}:{reservationId:N}";
 
-    /// <summary>STRING з результатом запиту на бронювання для повторів з тим самим Idempotency-Key.</summary>
-    public static string ReserveIdempotency(int eventId, string idempotencyKey) => $"idem:reserve:{eventId}:{idempotencyKey}";
+    /// <summary>
+    /// STRING з результатом запиту на бронювання для повторів з тим самим Idempotency-Key.
+    /// Ключ прив'язаний до користувача, щоб чужий клієнт із тим самим ключем не отримав чужу бронь.
+    /// userId не містить ':' (валідує Booking API), тому межа між userId і ключем однозначна.
+    /// </summary>
+    public static string ReserveIdempotency(int eventId, string userId, string idempotencyKey) =>
+        $"idem:reserve:{eventId}:{userId}:{idempotencyKey}";
 }

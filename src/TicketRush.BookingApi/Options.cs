@@ -18,4 +18,10 @@ public sealed class RabbitMqOptions
     public int Port { get; set; } = 5672;
     public string UserName { get; set; } = "guest";
     public string Password { get; set; } = "guest";
+
+    /// <summary>
+    /// Максимум одночасних публікацій (= відкритих каналів) на інстанс. Обмежує навантаження на брокер
+    /// і не дає вийти за ліміт каналів RabbitMQ на з'єднання (channel_max = 2047) під піком.
+    /// </summary>
+    public int MaxPublishChannels { get; set; } = 64;
 }

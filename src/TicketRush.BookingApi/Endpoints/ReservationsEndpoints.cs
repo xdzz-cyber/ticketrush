@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using TicketRush.BookingApi.Services;
 
@@ -9,9 +10,13 @@ public sealed record ReservationResponse(Guid ReservationId, int EventId, DateTi
 
 public sealed record ConfirmResponse(Guid ReservationId, string Status);
 
-public static class ReservationsEndpoints
+public static partial class ReservationsEndpoints
 {
     private const int MaxIdempotencyKeyLength = 100;
+
+    /// <summary>1..64 символи без ':' — userId входить у ключі Redis.</summary>
+    [GeneratedRegex("^[A-Za-z0-9._@-]{1,64}$")]
+    private static partial Regex UserIdPattern();
 
     public static IEndpointRouteBuilder MapReservations(this IEndpointRouteBuilder app)
     {
@@ -29,8 +34,9 @@ public static class ReservationsEndpoints
         if (string.IsNullOrWhiteSpace(idempotencyKey) || idempotencyKey.Length > MaxIdempotencyKeyLength)
             return Results.Problem($"Header 'Idempotency-Key' is required (1..{MaxIdempotencyKeyLength} chars).",
                 statusCode: StatusCodes.Status400BadRequest);
-        if (string.IsNullOrWhiteSpace(request.UserId))
-            return Results.Problem("'userId' is required.", statusCode: StatusCodes.Status400BadRequest);
+        if (request.UserId is null || !UserIdPattern().IsMatch(request.UserId))
+            return Results.Problem("'userId' is required: 1..64 chars of letters, digits, '.', '_', '@', '-'.",
+                statusCode: StatusCodes.Status400BadRequest);
 
         var result = await reservations.ReserveAsync(eventId, request.UserId, idempotencyKey);
         var body = new ReservationResponse(result.ReservationId, eventId, result.ExpiresAt);
@@ -48,7 +54,7 @@ public static class ReservationsEndpoints
         Guid reservationId,
         ReservationService reservations,
         BookingPublisher publisher,
-        ILogger<ReservationService> logger,
+        ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
         var result = await reservations.ConfirmAsync(reservationId);
@@ -63,7 +69,8 @@ public static class ReservationsEndpoints
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogError(ex, "Failed to publish BookingConfirmed for {ReservationId}", reservationId);
+            loggerFactory.CreateLogger(typeof(ReservationsEndpoints))
+                .LogError(ex, "Failed to publish BookingConfirmed for {ReservationId}", reservationId);
             return Results.Problem("Order queue is unavailable, retry the request.",
                 statusCode: StatusCodes.Status503ServiceUnavailable);
         }

@@ -72,6 +72,22 @@ public sealed class ReservationServiceTests(RedisFixture fixture) : IClassFixtur
     }
 
     [Fact]
+    public async Task SameIdempotencyKey_FromDifferentUsers_CreatesSeparateReservations()
+    {
+        var service = CreateService();
+        await service.ResetEventAsync(EventId, 10);
+        var key = Guid.NewGuid().ToString();
+
+        var first = await service.ReserveAsync(EventId, "user-1", key);
+        var second = await service.ReserveAsync(EventId, "user-2", key);
+
+        Assert.Equal(ReserveStatus.Reserved, first.Status);
+        Assert.Equal(ReserveStatus.Reserved, second.Status);
+        Assert.NotEqual(first.ReservationId, second.ReservationId);
+        Assert.Equal(8, await StockAsync());
+    }
+
+    [Fact]
     public async Task Confirm_IsIdempotent_AndRemovesHoldFromExpiryQueue()
     {
         var service = CreateService();

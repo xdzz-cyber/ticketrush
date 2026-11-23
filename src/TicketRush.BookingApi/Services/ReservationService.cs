@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using TicketRush.Shared;
@@ -36,7 +37,7 @@ public sealed class ReservationService(IConnectionMultiplexer redis, IOptions<Bo
                 RedisKeys.Stock(eventId),
                 RedisKeys.Hold(reservationId),
                 RedisKeys.ExpiringHolds,
-                RedisKeys.ReserveIdempotency(eventId, idempotencyKey),
+                RedisKeys.ReserveIdempotency(eventId, userId, idempotencyKey),
             ],
             [
                 reservationId.ToString("N"),
@@ -63,7 +64,7 @@ public sealed class ReservationService(IConnectionMultiplexer redis, IOptions<Bo
             return new ReserveResult(
                 status,
                 Guid.ParseExact(parts[0], "N"),
-                DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(parts[1])));
+                DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(parts[1], CultureInfo.InvariantCulture)));
         }
     }
 
@@ -84,10 +85,10 @@ public sealed class ReservationService(IConnectionMultiplexer redis, IOptions<Bo
 
         var message = new BookingConfirmed(
             reservationId,
-            EventId: int.Parse((string)result[1]!),
+            EventId: int.Parse((string)result[1]!, CultureInfo.InvariantCulture),
             UserId: (string)result[2]!,
             Quantity: 1,
-            ConfirmedAt: DateTimeOffset.FromUnixTimeMilliseconds(long.Parse((string)result[3]!)));
+            ConfirmedAt: DateTimeOffset.FromUnixTimeMilliseconds(long.Parse((string)result[3]!, CultureInfo.InvariantCulture)));
 
         return new ConfirmResult(code == 1 ? ConfirmStatus.Confirmed : ConfirmStatus.AlreadyConfirmed, message);
     }

@@ -21,7 +21,8 @@ public sealed class CatalogInitializer(IConnectionMultiplexer redis, ILogger<Cat
                 logger.LogInformation("Catalog seeded: {Count} events", SeedData.Events.Count);
                 return;
             }
-            catch (RedisException ex) when (attempt < 30)
+            // RedisTimeoutException успадковує TimeoutException, а не RedisException, тому ловимо обидва.
+            catch (Exception ex) when (ex is RedisException or TimeoutException && attempt < 30)
             {
                 logger.LogWarning("Redis is not ready yet (attempt {Attempt}): {Message}", attempt, ex.Message);
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);

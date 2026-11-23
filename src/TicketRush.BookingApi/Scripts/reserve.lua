@@ -2,7 +2,7 @@
 -- з іншими командами, тому перевірка залишку і декремент не можуть "розійтися" — oversell неможливий.
 --
 -- KEYS[1] event:{id}:stock      KEYS[2] hold:{reservationId}
--- KEYS[3] holds:expiring        KEYS[4] idem:reserve:{eventId}:{key}
+-- KEYS[3] holds:expiring        KEYS[4] idem:reserve:{eventId}:{userId}:{key}
 -- ARGV[1] reservationId (N)     ARGV[2] eventId        ARGV[3] userId
 -- ARGV[4] expiresAt (unix ms)   ARGV[5] TTL ключа hold (ms)
 -- ARGV[6] TTL ключа ідемпотентності (s)                ARGV[7] member для holds:expiring

@@ -32,7 +32,7 @@
 | `event:{id}:stock` | STRING | залишок місць |
 | `hold:{reservationId}` | HASH, TTL | eventId, userId, expiresAt, status (`held`/`confirmed`) |
 | `holds:expiring` | ZSET | member `{eventId}:{reservationId}`, score = expiresAt (unix ms) |
-| `idem:reserve:{eventId}:{key}` | STRING, TTL 24 год | результат бронювання для повторів з тим самим `Idempotency-Key` |
+| `idem:reserve:{eventId}:{userId}:{key}` | STRING, TTL 24 год | результат бронювання для повторів того самого користувача з тим самим `Idempotency-Key` |
 
 ## Потоки
 
