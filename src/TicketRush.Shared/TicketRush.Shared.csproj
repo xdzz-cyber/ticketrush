@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Спільні контракти між Booking API та Order Worker. Змінювати лише за згодою обох. -->
+</Project>
