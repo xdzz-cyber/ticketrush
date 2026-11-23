@@ -18,8 +18,8 @@ public sealed class BookingConfirmedConsumer(
         _ = scopeFactory;
         _ = options;
 
-        // TODO(Астахов): підключитися до RabbitMQ (RabbitMQ.Client 7, async API), оголосити durable-чергу BookingConfirmed.QueueName, BasicQos з prefetch і запустити AsyncEventingBasicConsumer з autoAck=false — consumer видно в RabbitMQ UI, повідомлення не губляться при падінні воркера.
-        // TODO(Астахов): обробник: десеріалізувати BookingConfirmed (MessageJson.Options), імітувати оплату (Task.Delay кілька десятків мс), зберегти Order у PostgreSQL через scope з TicketRushDbContext, потім BasicAck — після spike-тесту кількість Orders у БД = кількість успішних confirm.
+        // TODO(Астахов): підключитися до RabbitMQ (RabbitMQ.Client 7, async API), оголосити чергу BookingConfirmed.QueueName з тими самими параметрами, що й Booking API (durable: true, exclusive: false, autoDelete: false, без arguments — див. BookingPublisher.GetConnectionAsync; інакше RabbitMQ закриє канал з PRECONDITION_FAILED), BasicQos з prefetch і запустити AsyncEventingBasicConsumer з autoAck=false — consumer видно в RabbitMQ UI, повідомлення не губляться при падінні воркера.
+        // TODO(Астахов): обробник: десеріалізувати BookingConfirmed (MessageJson.Options), імітувати оплату (Task.Delay кілька десятків мс), зберегти Order у PostgreSQL через scope з TicketRushDbContext, потім BasicAck — після spike-тесту, коли черга booking.confirmed спорожніла, приріст кількості Orders за прогін = confirmations_ok з k6 (reset події не чистить Orders, тому рахувати різницю до/після або очищати таблицю перед тестом).
         // TODO(Астахов): ідемпотентність: повторна доставка того самого ReservationId не створює другий Order (унікальний індекс + обробка DbUpdateException як "вже оброблено" → BasicAck) — повторна публікація того самого повідомлення не змінює кількість рядків.
         // TODO(Астахов): помилки: тимчасова помилка БД → BasicNack(requeue: true), "битий" JSON → BasicNack(requeue: false) з логом — воркер не падає і не зациклюється на одному повідомленні.
 

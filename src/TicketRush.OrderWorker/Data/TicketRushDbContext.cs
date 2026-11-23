@@ -30,7 +30,7 @@ public sealed class TicketRushDbContext(DbContextOptions<TicketRushDbContext> op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // TODO(Астахов): налаштувати таблиці events/orders: унікальний індекс на Orders.ReservationId (основа ідемпотентності), FK Orders.EventId → Events.Id, обмеження довжини рядків — схема в PostgreSQL відповідає моделі, дубль ReservationId відхиляється БД.
+        // TODO(Астахов): налаштувати таблиці Events/Orders (імена за замовчуванням EF Core — з DbSet): унікальний індекс на Orders.ReservationId (основа ідемпотентності), FK Orders.EventId → Events.Id, обмеження довжини рядків — схема в PostgreSQL відповідає моделі, дубль ReservationId відхиляється БД.
         base.OnModelCreating(modelBuilder);
     }
 }

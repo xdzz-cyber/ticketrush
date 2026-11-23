@@ -11,4 +11,6 @@ RUN dotnet publish src/TicketRush.OrderWorker/TicketRush.OrderWorker.csproj -c R
 FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app
 COPY --from=build /app .
+# Непривілейований користувач з образу .NET 8 (APP_UID=1654).
+USER $APP_UID
 ENTRYPOINT ["dotnet", "TicketRush.OrderWorker.dll"]

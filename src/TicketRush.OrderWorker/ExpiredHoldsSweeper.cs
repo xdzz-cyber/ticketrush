@@ -25,7 +25,7 @@ public sealed class ExpiredHoldsSweeper(
         _ = options;
         _ = time;
 
-        // TODO(Астахов): Lua-скрипт release.lua (embedded resource): ZRANGEBYSCORE holds:expiring -inf now LIMIT 0 BatchSize; для кожного member: якщо ZREM повернув 1 → INCR event:{eventId}:stock (eventId — частина member до ':'); повернути кількість звільнених — усе атомарно в одному скрипті, тест: бронь із TTL 5 c без confirm через ~10 c повертає +1 до available у GET /events/{id}.
+        // TODO(Астахов): Lua-скрипт release.lua (embedded resource): ZRANGEBYSCORE holds:expiring -inf now LIMIT 0 BatchSize; для кожного member: якщо ZREM повернув 1 → INCR event:{eventId}:stock (eventId — частина member до ':'); повернути кількість звільнених — усе атомарно в одному скрипті, тест: Booking API запущений з Booking__HoldTtlSeconds=5 (змінна середовища в compose або перед dotnet run), бронь без confirm через ~10 c повертає +1 до available у GET /events/{id}, а confirm цієї броні після звільнення дає 410.
         // TODO(Астахов): цикл кожні SweeperOptions.IntervalSeconds (PeriodicTimer) з логуванням кількості звільнених місць; помилки Redis логуються, цикл продовжується — воркер переживає рестарт Redis.
 
         logger.LogWarning("ExpiredHoldsSweeper is not implemented yet");
