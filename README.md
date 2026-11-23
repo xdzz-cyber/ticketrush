@@ -45,6 +45,19 @@ docker compose up -d --scale booking-api=3
 
 Зупинка з видаленням даних: `docker compose down -v`.
 
+### Локальний запуск сервісу без Docker (для розробки)
+
+Інфраструктура — у Docker, сервіс — через `dotnet run`. `appsettings.json` уже налаштовані на `localhost`
+і на ті самі логіни, що й compose:
+
+```powershell
+docker compose up -d redis rabbitmq postgres
+dotnet run --project src/TicketRush.BookingApi --urls http://localhost:5099
+```
+
+Якщо у `.env` змінено паролі, передайте їх змінними середовища, наприклад `$env:RabbitMq__Password = "..."`.
+Ендпоінт `/admin/...` локально вимкнений; увімкнути — `$env:Admin__Enabled = "true"`.
+
 ## API
 
 | Метод | Шлях | Відповіді |
